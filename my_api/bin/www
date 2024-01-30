@@ -1,0 +1,214 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app').app;
+var debug = require('debug')('my-api:server');
+var http = require('http');
+const socketio = require('socket.io');
+var sharedSession = require("express-socket.io-session");
+const { sessionMiddleware } = require('../app');
+const socket_io = require('../services/socket');
+// const chat_channels = ['global_notifications', 'global_chat'];
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = normalizePort(process.env.PORT || '4000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+
+var server = http.createServer(app);
+const io = socketio(server, {
+  cors: {
+    origin: process.env.FRONT_SERVER,
+    credentials: true
+  },
+});
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
+
+// Socket.IO
+// console.log(app)
+io.use(sharedSession(sessionMiddleware, {
+  autoSave: true, // Automatically save the session to store changes made by Socket.io
+}));
+
+socket_io(io);
+// io.on('connection', async(socket) => {
+//   console.log('new client connected');
+//   console.log("SOCKET:", socket.id);
+//   const { User, Conversation, Message } = require('../models');
+
+// //   console.log("SOCKET:", socket.handshake.session);
+//   if(socket.handshake.session?.current_user){
+//     const current_user = socket.handshake.session.current_user
+//     console.log(current_user.id);
+    
+//     socket.on('join_room', (room) => {
+//       socket.join(room);
+//       console.log(`User ${socket.id} joined room ${room}`);
+//       io.to(room).emit('send_message', 'welcome....');
+//     });
+
+//     socket.on('send_message', (room, message) => {
+//       let msg = {};
+//       msg.sender_id = current_user.id;
+//       msg.conversation_id = room
+//       msg.data = message
+//       Message.create(msg).then((data)=>{
+//         let result = data.toJSON()
+//         result.sender = {
+//           id: current_user.id,
+//           full_name: current_user.full_name
+//         }
+//         console.log(result);
+//         io.to(room).emit('message', result);
+//       })
+//       .catch((err)=> {
+//         console.log("ERROR:", err);
+//       })
+//     });
+
+//     // const user = await User.update({ online: true }, {
+//     //   where: {
+//     //     id: current_user.id
+//     //   }
+//     // });
+
+
+//     // User.findOne({ 
+//     //   where: {
+//     //     id: current_user?.id
+//     //   },
+//     //   include: [
+//     //     {
+//     //       model: Conversation,
+//     //       as: 'receiverable',
+//     //       include: [{
+//     //         model: User,
+//     //         as: 'creator'
+//     //       }],
+//     //     },
+//     //     {
+//     //       model: Conversation,
+//     //       as: 'creator',
+//     //       include: [{
+//     //         model: User,
+//     //         as: 'receiverable'
+//     //       }],
+//     //     }
+//     //   ]
+//     // }).then((data) => {
+//     //   const result = data.toJSON()
+//     //   const conversations = result.receiverable.concat(result.creator);
+//     //   conversations.map((conversation) => {
+//     //     let chat_room = `chat_room_${conversation.id}`;
+//     //     console.log("============================");
+//     //     console.log("CR:", chat_room);
+//     //     console.log("============================");
+//     //     socket.join(chat_room)
+//     //     socket.on('message', (message) => {
+//     //       console.log("-------------------------");
+//     //       console.log("MESSAGE:", message);
+//     //       console.log("-------------------------");
+//     //       // Broadcast the message to everyone in the room
+//     //       io.to(chat_room).emit('message', message);
+//     //     });
+//     //   })
+//     // });
+//   }
+  
+
+// //   socket.on('sendMessage', (message) => {
+// //     io.emit('message', message);
+// //   });  
+
+//   socket.on('disconnect', async() => {
+//     console.log(`Socket ${socket.id} disconnected`);
+//     if(socket.handshake.session?.current_user){
+//       const current_user = socket.handshake.session.current_user
+//       console.log(current_user.id);
+//       const user = await User.update({ online: false }, {
+//         where: {
+//           id: current_user.id
+//         }
+//       });
+//       console.log("offline", user);
+//     }
+//   });
+// });
+
+module.exports = { io }

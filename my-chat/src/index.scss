@@ -1,0 +1,31 @@
+body {
+  letter-spacing: 0.3px !important;
+}
+
+$border-radius: .5rem;
+
+$body-bg: #f4f5fa;
+$card-bg: #ffffff;
+
+// dark mode
+$body-bg-dark: #28243d;
+
+// Override default variables before the import
+$primary: #8a4cff;
+// $secondary:     $gray-600 !default;
+// $success:       $green !default;
+// $info:          $cyan !default;
+// $warning:       $yellow !default;
+// $danger:        $red !default;
+// $light:         $gray-100 !default;
+
+// Import Bootstrap and its default variables
+
+@import '~bootstrap/scss/bootstrap.scss';
+
+[data-bs-theme=dark] {
+  $card-bg: #312d4b;
+  @import '~bootstrap/scss/bootstrap.scss';
+}
+
+

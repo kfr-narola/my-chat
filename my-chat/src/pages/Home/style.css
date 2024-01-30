@@ -1,0 +1,9 @@
+.chat_list, .chat_body{
+  height: calc(100vh - 85px) !important;
+}
+
+.call_box{
+  position: fixed;
+  top: 80px;
+  right: 20px
+}
